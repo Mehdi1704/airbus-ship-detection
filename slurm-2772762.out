@@ -1,0 +1,20 @@
+no change     /home/mbouchou/miniconda3/condabin/conda
+no change     /home/mbouchou/miniconda3/bin/conda
+no change     /home/mbouchou/miniconda3/bin/conda-env
+no change     /home/mbouchou/miniconda3/bin/activate
+no change     /home/mbouchou/miniconda3/bin/deactivate
+no change     /home/mbouchou/miniconda3/etc/profile.d/conda.sh
+no change     /home/mbouchou/miniconda3/etc/fish/conf.d/conda.fish
+no change     /home/mbouchou/miniconda3/shell/condabin/Conda.psm1
+no change     /home/mbouchou/miniconda3/shell/condabin/conda-hook.ps1
+no change     /home/mbouchou/miniconda3/lib/python3.12/site-packages/xontrib/conda.xsh
+no change     /home/mbouchou/miniconda3/etc/profile.d/conda.csh
+no change     /home/mbouchou/.bashrc
+No action taken.
+
+CondaError: Run 'conda init' before 'conda activate'
+
+Traceback (most recent call last):
+  File "/home/mbouchou/airbus-ship-detection/u-net_v2.py", line 4, in <module>
+    import pandas as pd
+ModuleNotFoundError: No module named 'pandas'
