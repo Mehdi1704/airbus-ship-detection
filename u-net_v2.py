@@ -20,7 +20,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 # --- Configuration ---
 BATCH_SIZE = 16
 IMAGE_SIZE = (256, 256)
-EPOCHS = 20  # Increased epochs since we have early stopping
+EPOCHS = 30  # Increased epochs since we have early stopping
 Train_v2_path = '/home/mbouchou/images'
 Masks_csv_path = '/home/mbouchou/airbus-ship-detection/masks_subset.csv'
 
@@ -184,13 +184,13 @@ model.summary()
 
 # --- Callbacks ---
 # 1. Save Best Model
-checkpoint = ModelCheckpoint('best_unet_model2.keras', monitor='val_dice_coefficient', mode='max', save_best_only=True, verbose=1)
+checkpoint = ModelCheckpoint('best_unet_model3.keras', monitor='val_dice_coefficient', mode='max', save_best_only=True, verbose=1)
 # 2. Reduce LR if stuck
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1, min_lr=1e-6)
 # 3. Stop early if no improvement
 early_stopping = EarlyStopping(monitor="val_loss", patience=8, verbose=1, restore_best_weights=True)
 # 4. Log history to CSV (Crucial for cluster!)
-csv_logger = CSVLogger('training_history.csv', append=True)
+csv_logger = CSVLogger('training_history3.csv', append=True)
 
 callbacks_list = [checkpoint, reduce_lr, early_stopping, csv_logger]
 
@@ -249,5 +249,5 @@ plt.title('Dice Coefficient')
 plt.xlabel('Epochs')
 plt.legend()
 
-plt.savefig('training_results2.png')
-print("Plots saved to training_results2.png")
+plt.savefig('training_results3.png')
+print("Plots saved to training_results3.png")
