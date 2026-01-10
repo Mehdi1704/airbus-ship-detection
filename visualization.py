@@ -8,11 +8,12 @@ import tensorflow as tf
 from keras.models import load_model
 from skimage.measure import label, regionprops
 
-FOLDER_PATH ='/Users/mbouchou/Downloads/airbus-ship-detection/test_v2/'
+#FOLDER_PATH ='/Users/mbouchou/Downloads/airbus-ship-detection/test_v2/'
+FOLDER_PATH ='/home/mbouchou/test_v2'
 THRESHOLD = 0.3
-SUBMISSION_FILE = 'submission5.csv'
-MODEL_PATH = '/Users/mbouchou/Desktop/airbus-ship-detection/best_unet_model3.keras'
-
+SUBMISSION_FILE = 'submissions/submission6.csv'
+#MODEL_PATH = '/Users/mbouchou/Desktop/airbus-ship-detection/best_unet_model3.keras'
+MODEL_PATH = '/home/mbouchou/airbus-ship-detection/best_resnet_unetpp.keras'
 
 def preprocess_input(image_path, target_size=(256, 256)):
     image = cv2.imread(image_path)

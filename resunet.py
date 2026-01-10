@@ -3,29 +3,35 @@ import cv2
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import keras
 import math
 
-# Force non-interactive backend for cluster environment
+# --- 1. THE CRITICAL FIX FOR YOUR ERROR ---
+if not hasattr(keras.utils, 'generic_utils'):
+    keras.utils.generic_utils = keras.utils
+
 import matplotlib
 matplotlib.use('agg') 
 import matplotlib.pyplot as plt
 
-# Install: pip install segmentation-models
+# Now import the library
 import segmentation_models as sm
 from tensorflow.keras.utils import Sequence
 from tensorflow.keras import backend as K
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, CSVLogger
 
-# Set framework to Keras/TF
 sm.set_framework('tf.keras')
 
 # --- Configuration ---
-BATCH_SIZE = 8  # Reduced for ResNet152/101 memory requirements
+BATCH_SIZE = 8 
 IMAGE_SIZE = (256, 256)
-EPOCHS = 50
+EPOCHS = 5
 Train_v2_path = '/home/mbouchou/images'
 Masks_csv_path = '/home/mbouchou/airbus-ship-detection/masks_subset.csv'
+TRAIN_RESULTS = 'training_results5.png'
+CSV_RESULTS = 'training_log_final5.csv'
+MODEL_NAME = 'test_resunet.keras'
 
 # --- Helper Functions ---
 def rle_decode(mask_rle, shape=(768, 768)):
@@ -40,7 +46,7 @@ def rle_decode(mask_rle, shape=(768, 768)):
         img[lo:hi] = 1
     return img.reshape(shape).T
 
-def split_data(data, empty_masks=2000, test_size=0.2, random_state=42):
+def split_data(data, empty_masks=2000, test_size=0.2):
     masks_df = data.copy()
     masks_df['ship'] = masks_df['EncodedPixels'].map(lambda c_row: 1 if isinstance(c_row, str) else 0)
     masks_df['n_ships'] = masks_df.groupby('ImageId')['ship'].transform('sum')
@@ -48,9 +54,9 @@ def split_data(data, empty_masks=2000, test_size=0.2, random_state=42):
     
     empty_masks_df = masks_df[masks_df.ship == 0]
     masks_df = masks_df[masks_df.ship == 1]
-    masks_df = pd.concat([masks_df, empty_masks_df.sample(n=empty_masks, random_state=random_state)], axis=0)
+    masks_df = pd.concat([masks_df, empty_masks_df.sample(n=empty_masks, random_state=42)], axis=0)
     
-    train_ids, test_ids = train_test_split(masks_df, test_size=test_size, stratify=masks_df['n_ships'].values, random_state=random_state)
+    train_ids, test_ids = train_test_split(masks_df, test_size=test_size, stratify=masks_df['n_ships'].values, random_state=42)
     return data[data['ImageId'].isin(train_ids.ImageId)], data[data['ImageId'].isin(test_ids.ImageId)]
 
 # --- Data Generator ---
@@ -80,6 +86,8 @@ class CustomDataGenerator(Sequence):
         X = np.empty((len(batch_image_ids), *self.image_size, 3), dtype=np.float32)
         y = np.empty((len(batch_image_ids), *self.image_size, 1), dtype=np.float32)
 
+        preprocess_input = sm.get_preprocessing('resnet101')
+
         for i, image_id in enumerate(batch_image_ids):
             image_path = os.path.join(self.image_folder, image_id)
             img = cv2.imread(image_path)
@@ -88,8 +96,7 @@ class CustomDataGenerator(Sequence):
             else:
                 img = cv2.resize(img, (self.image_size[1], self.image_size[0]))
             
-            # ResNet specific preprocessing
-            img = sm.get_preprocessing('resnet101')(img)
+            img = preprocess_input(img)
 
             mask = np.zeros((768, 768), dtype=np.uint8)
             for m in self.masks_by_image.get(image_id, []):
@@ -109,21 +116,17 @@ class CustomDataGenerator(Sequence):
             X[i], y[i] = img, mask
         return X, y
 
-# --- Model Creation ---
-# Backbone choice: resnet101 is very deep and powerful
-BACKBONE = 'resnet101'
-model = sm.UnetPlusPlus(
-    BACKBONE, 
+# --- Build and Compile ---
+model = sm.Unet(
+    'resnet101', 
     encoder_weights='imagenet', 
     classes=1, 
     activation='sigmoid', 
     input_shape=(256, 256, 3)
 )
 
-# Focal + Dice Loss: The breakthrough for 0.55 score
-dice_loss = sm.losses.DiceLoss()
-focal_loss = sm.losses.BinaryFocalLoss()
-total_loss = dice_loss + (1.0 * focal_loss)
+# Balanced Loss: Essential for small ships
+total_loss = sm.losses.DiceLoss() + (1.0 * sm.losses.BinaryFocalLoss())
 
 model.compile(
     optimizer=tf.optimizers.Adam(learning_rate=1e-4),
@@ -131,7 +134,7 @@ model.compile(
     metrics=[sm.metrics.iou_score]
 )
 
-# --- Pipeline ---
+# --- Execute ---
 train_df, val_df = split_data(pd.read_csv(Masks_csv_path))
 train_gen = CustomDataGenerator(Train_v2_path, train_df, batch_size=BATCH_SIZE, augment=True)
 val_gen = CustomDataGenerator(Train_v2_path, val_df, batch_size=BATCH_SIZE, augment=False, shuffle=False)
@@ -146,13 +149,14 @@ def tf_dataset(gen):
     )
     return dataset.repeat().prefetch(tf.data.AUTOTUNE)
 
-# --- Callbacks ---
 callbacks = [
-    ModelCheckpoint('best_resnet_unetpp.keras', monitor='val_iou_score', mode='max', save_best_only=True),
+    ModelCheckpoint(MODEL_NAME, monitor='val_iou_score', mode='max', save_best_only=True),
     ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-7),
     EarlyStopping(monitor='val_loss', patience=12, restore_best_weights=True),
-    CSVLogger('training_log_v3.csv')
+    CSVLogger(CSV_RESULTS)
 ]
+
+print("Starting ResNet101 Unet++ Training...")
 
 # --- Train ---
 history = model.fit(
@@ -184,5 +188,5 @@ plt.title('Dice Coefficient')
 plt.xlabel('Epochs')
 plt.legend()
 
-plt.savefig('training_results4.png')
-print("Plots saved to training_results4.png")
+plt.savefig(TRAIN_RESULTS)
+print(f"Plots saved to {TRAIN_RESULTS}")
