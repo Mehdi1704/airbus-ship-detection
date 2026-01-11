@@ -1,139 +1,64 @@
+import os
+# 1. Set the framework to use TensorFlow Keras explicitly
+os.environ["SM_FRAMEWORK"] = "tf.keras"
+
+# 2. Fix the missing generic_utils attribute (Monkey Patch)
+import tensorflow.keras.utils
+import tensorflow.keras as keras
+
+# Create a dummy generic_utils module if it doesn't exist
+# This tricks the library into thinking the old structure is still there
+if not hasattr(keras.utils, 'generic_utils'):
+    keras.utils.generic_utils = keras.utils
+
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow as tf
 from keras import models, layers
-import keras.backend as K
-from tensorflow.keras.optimizers import Adam
-from keras.losses import binary_crossentropy
+# Now it is safe to import segmentation_models
+from segmentation_models import Unet, get_preprocessing
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, EarlyStopping, ReduceLROnPlateau
 from npy_generator import CachedNpyGenerator
-
+from tensorflow.keras.optimizers import Adam
 
 # Parameters
-BATCH_SIZE = 4                 # Train batch size
-EDGE_CROP = 16                 # While building the model
-NB_EPOCHS = 5                  # Training epochs
-GAUSSIAN_NOISE = 0.1           # To be used in a layer in the model
-UPSAMPLE_MODE = 'SIMPLE'       # SIMPLE ==> UpSampling2D, else Conv2DTranspose
-NET_SCALING = None             # Downsampling inside the network                        
-IMG_SCALING = (1, 1)           # Downsampling in preprocessing
-VALID_IMG_COUNT = 400          # Valid batch size
-MAX_TRAIN_STEPS = 200          # Maximum number of steps_per_epoch in training
+BATCH_SIZE = 64                 
+NB_EPOCHS = 15                 
 CACHE_IMG_DIR = "/home/mbouchou/airbus-ship-detection-cache/images_256"
 CACHE_MSK_DIR = "/home/mbouchou/airbus-ship-detection-cache/masks_256"
 
-# Conv2DTranspose upsampling
-def upsample_conv(filters, kernel_size, strides, padding):
-    return layers.Conv2DTranspose(filters, kernel_size, strides=strides, padding=padding)
-# Upsampling without Conv2DTranspose
-def upsample_simple(filters, kernel_size, strides, padding):
-    return layers.UpSampling2D(strides)
+# --- MODEL DEFINITION ---
+# This one line replaces all the manual layer building you had before.
+# It downloads ResNet34 weights trained on ImageNet.
+seg_model = Unet('resnet34', encoder_weights='imagenet', classes=1, activation='sigmoid')
+preprocess_input = get_preprocessing('resnet34')
 
-# Upsampling method choice
-if UPSAMPLE_MODE=='DECONV':
-    upsample=upsample_conv
-else:
-    upsample=upsample_simple
-
-# Building the layers of UNET
-input_img = layers.Input((256, 256, 3), name='RGB_Input')
-pp_in_layer = input_img
-
-# If NET_SCALING is defined then do the next step else continue ahead
-if NET_SCALING is not None:
-    pp_in_layer = layers.AvgPool2D(NET_SCALING)(pp_in_layer)
-
-# To avoid overfitting and fastening the process of training
-pp_in_layer = layers.GaussianNoise(GAUSSIAN_NOISE)(pp_in_layer)                       # Useful to mitigate overfitting
-pp_in_layer = layers.BatchNormalization()(pp_in_layer)                                # Allows using higher learning rate without causing problems with gradients
-
-
-## Downsample (C-->C-->MP)
-
-c1 = layers.Conv2D(8, (3, 3), activation='relu', padding='same') (pp_in_layer)
-c1 = layers.Conv2D(8, (3, 3), activation='relu', padding='same') (c1)
-p1 = layers.MaxPooling2D((2, 2)) (c1)
-
-c2 = layers.Conv2D(16, (3, 3), activation='relu', padding='same') (p1)
-c2 = layers.Conv2D(16, (3, 3), activation='relu', padding='same') (c2)
-p2 = layers.MaxPooling2D((2, 2)) (c2)
-
-c3 = layers.Conv2D(32, (3, 3), activation='relu', padding='same') (p2)
-c3 = layers.Conv2D(32, (3, 3), activation='relu', padding='same') (c3)
-p3 = layers.MaxPooling2D((2, 2)) (c3)
-
-c4 = layers.Conv2D(64, (3, 3), activation='relu', padding='same') (p3)
-c4 = layers.Conv2D(64, (3, 3), activation='relu', padding='same') (c4)
-p4 = layers.MaxPooling2D(pool_size=(2, 2)) (c4)
-
-
-c5 = layers.Conv2D(128, (3, 3), activation='relu', padding='same') (p4)
-c5 = layers.Conv2D(128, (3, 3), activation='relu', padding='same') (c5)
-
-## Upsample (U --> Concat --> C --> C)
-
-u6 = upsample(64, (2, 2), strides=(2, 2), padding='same') (c5)
-u6 = layers.concatenate([u6, c4])
-c6 = layers.Conv2D(64, (3, 3), activation='relu', padding='same') (u6)
-c6 = layers.Conv2D(64, (3, 3), activation='relu', padding='same') (c6)
-
-u7 = upsample(32, (2, 2), strides=(2, 2), padding='same') (c6)
-u7 = layers.concatenate([u7, c3])
-c7 = layers.Conv2D(32, (3, 3), activation='relu', padding='same') (u7)
-c7 = layers.Conv2D(32, (3, 3), activation='relu', padding='same') (c7)
-
-u8 = upsample(16, (2, 2), strides=(2, 2), padding='same') (c7)
-u8 = layers.concatenate([u8, c2])
-c8 = layers.Conv2D(16, (3, 3), activation='relu', padding='same') (u8)
-c8 = layers.Conv2D(16, (3, 3), activation='relu', padding='same') (c8)
-
-u9 = upsample(8, (2, 2), strides=(2, 2), padding='same') (c8)
-u9 = layers.concatenate([u9, c1], axis=3)
-c9 = layers.Conv2D(8, (3, 3), activation='relu', padding='same') (u9)
-c9 = layers.Conv2D(8, (3, 3), activation='relu', padding='same') (c9)
-
-d = layers.Conv2D(1, (1, 1), activation='sigmoid') (c9)
-d = layers.Cropping2D((EDGE_CROP, EDGE_CROP))(d)
-d = layers.ZeroPadding2D((EDGE_CROP, EDGE_CROP))(d)
-
-if NET_SCALING is not None:
-    d = layers.UpSampling2D(NET_SCALING)(d)
-
-seg_model = models.Model(inputs=[input_img], outputs=[d])
-
-seg_model.summary()
-
+# --- LOSS FUNCTIONS ---
 def dice_loss(y_true, y_pred, smooth=1.0):
     y_true = tf.cast(y_true, tf.float32)
     y_pred = tf.cast(y_pred, tf.float32)
-
     intersection = tf.reduce_sum(y_true * y_pred, axis=[1,2,3])
     union = tf.reduce_sum(y_true, axis=[1,2,3]) + tf.reduce_sum(y_pred, axis=[1,2,3])
-
     dice = (2.0 * intersection + smooth) / (union + smooth)
-    return 1.0 - dice  # (batch,)
+    return 1.0 - dice
 
 def combo_loss(y_true, y_pred, bce_weight=0.5, smooth=1.0):
     y_true = tf.cast(y_true, tf.float32)
     y_pred = tf.cast(y_pred, tf.float32)
-
-    bce = tf.keras.losses.binary_crossentropy(y_true, y_pred)  # (batch, H, W) or (batch,H,W,1)
-    bce = tf.reduce_mean(bce, axis=list(range(1, len(bce.shape))))  # -> (batch,)
-
-    dl = dice_loss(y_true, y_pred, smooth=smooth)  # -> (batch,)
-
+    bce = tf.keras.losses.binary_crossentropy(y_true, y_pred)
+    bce = tf.reduce_mean(bce, axis=list(range(1, len(bce.shape))))
+    dl = dice_loss(y_true, y_pred, smooth=smooth)
     return bce_weight * bce + (1.0 - bce_weight) * dl
 
 def dice_coef(y_true, y_pred, smooth=1.0):
     y_true = tf.cast(y_true, tf.float32)
     y_pred = tf.cast(y_pred, tf.float32)
-
     intersection = tf.reduce_sum(y_true * y_pred, axis=[1,2,3])
     union = tf.reduce_sum(y_true, axis=[1,2,3]) + tf.reduce_sum(y_pred, axis=[1,2,3])
-
     dice = (2.0 * intersection + smooth) / (union + smooth)
     return tf.reduce_mean(dice)
 
+# --- DATA LOADING ---
 df = pd.read_csv("/home/mbouchou/airbus-ship-detection/masks_subset.csv")
 img_ids = df["ImageId"].drop_duplicates().values
 train_ids, val_ids = train_test_split(img_ids, test_size=0.2, random_state=42)
@@ -141,27 +66,42 @@ train_ids, val_ids = train_test_split(img_ids, test_size=0.2, random_state=42)
 train_df = df[df["ImageId"].isin(train_ids)]
 val_df   = df[df["ImageId"].isin(val_ids)]
 
-train_gen = CachedNpyGenerator(train_df, CACHE_IMG_DIR, CACHE_MSK_DIR, batch_size=BATCH_SIZE, shuffle=True,  augment=True)
-val_gen   = CachedNpyGenerator(val_df,   CACHE_IMG_DIR, CACHE_MSK_DIR, batch_size=BATCH_SIZE, shuffle=False, augment=False)
+train_gen = CachedNpyGenerator(
+    train_df, 
+    CACHE_IMG_DIR, 
+    CACHE_MSK_DIR, 
+    batch_size=BATCH_SIZE, 
+    shuffle=True,  
+    augment=True,
+    preprocess=preprocess_input  # <--- PASS IT HERE
+)
 
-# Compile the model
+val_gen = CachedNpyGenerator(
+    val_df,   
+    CACHE_IMG_DIR, 
+    CACHE_MSK_DIR, 
+    batch_size=BATCH_SIZE, 
+    shuffle=False, 
+    augment=False,
+    preprocess=preprocess_input  # <--- PASS IT HERE
+)
+
+# --- COMPILE ---
 seg_model.compile(
-    optimizer=Adam(1e-4),
+    optimizer=Adam(1e-3),  # 1e-3 is good for ResNet decoder
     loss=combo_loss,
     metrics=[dice_coef]
 )
 
-
-# Monitor validation dice coeff and save the best model weights
+# --- CALLBACKS ---
 checkpoint = ModelCheckpoint(
-    "seg_model_best.keras",
+    "seg_model_best_new.keras",
     monitor="val_dice_coef",
     mode="max",
     save_best_only=True,
     verbose=1
 )
 
-# Reduce Learning Rate on Plateau
 reduceLROnPlat = ReduceLROnPlateau(
     monitor='val_dice_coef',
     factor=0.5,
@@ -173,16 +113,17 @@ reduceLROnPlat = ReduceLROnPlateau(
     min_lr=1e-6
 )
 
-# Stop training once there is no improvement seen in the model
-early = EarlyStopping(monitor="val_dice_coef", 
-                      mode="max", 
-                      patience=15) # probably needs to be more patient, but kaggle time is limited
+early = EarlyStopping(monitor="val_dice_coef", mode="max", patience=15)
 
-# Callbacks ready
 callbacks_list = [checkpoint, early, reduceLROnPlat]
 
-steps_per_epoch = min(MAX_TRAIN_STEPS, len(train_gen))
+# --- TRAINING ---
+# Using the generator length directly is the safest way
+steps_per_epoch = len(train_gen)
 validation_steps = len(val_gen)
+
+print(f"Training on {steps_per_epoch} steps per epoch")
+print(f"Validating on {validation_steps} steps")
 
 history = seg_model.fit(
     train_gen,
@@ -193,4 +134,4 @@ history = seg_model.fit(
     callbacks=callbacks_list
 )
 
-seg_model.save('seg_model.keras')
+seg_model.save('seg_model_new.keras')

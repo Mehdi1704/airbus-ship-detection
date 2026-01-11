@@ -1,2 +1,2 @@
-best_resnet_unetpp.keras
-test_resunet.keras
+*.keras
+seg_model_best_fast.keras
