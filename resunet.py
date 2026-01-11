@@ -26,7 +26,7 @@ sm.set_framework('tf.keras')
 # --- Configuration ---
 BATCH_SIZE = 8 
 IMAGE_SIZE = (256, 256)
-EPOCHS = 5
+EPOCHS = 25
 Train_v2_path = '/home/mbouchou/images'
 Masks_csv_path = '/home/mbouchou/airbus-ship-detection/masks_subset.csv'
 TRAIN_RESULTS = 'training_results5.png'
