@@ -18,7 +18,7 @@ from keras import models, layers
 # Now it is safe to import segmentation_models
 from segmentation_models import Unet, get_preprocessing
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, EarlyStopping, ReduceLROnPlateau
-from npy_generator import CachedNpyGenerator
+from trainings.npy_generator import CachedNpyGenerator
 from tensorflow.keras.optimizers import Adam
 
 # Parameters
