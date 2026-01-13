@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=8
 
 
-python ynet.py
+python finetuning.py
