@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=8
 
 
-python log_processing.py
+python debug_model_big.py

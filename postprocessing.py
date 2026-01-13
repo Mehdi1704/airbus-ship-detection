@@ -4,12 +4,12 @@ import os
 import gc
 
 # --- CONFIGURATION ---
-INPUT_CSV = 'submissions/finetuned/submission_v2_corrected_09.csv'
+INPUT_CSV = 'submissions/finetuned/rgb9.csv'
 OUTPUT_DIR = 'submissions/finetuned_09' # Folder to save variants
 IMG_SHAPE = (768, 768)
 
 # Define all the pixel thresholds you want to generate files for
-PIXEL_THRESHOLDS = [200, 400, 600]
+PIXEL_THRESHOLDS = [350, 450]
 
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -139,7 +139,7 @@ for p in PIXEL_THRESHOLDS:
         missing_rows = [{'ImageId': i, 'EncodedPixels': np.nan} for i in missing_ids]
         sub_df = pd.concat([sub_df, pd.DataFrame(missing_rows)], ignore_index=True)
         
-    filename = f"{OUTPUT_DIR}/submission_04_clean_{p}.csv"
+    filename = f"{OUTPUT_DIR}/rgb_09_clean_{p}.csv"
     sub_df.to_csv(filename, index=False)
     print(f"✅ Saved: {filename} (Total Rows: {len(sub_df)})")
 

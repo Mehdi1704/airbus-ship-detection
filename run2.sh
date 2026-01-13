@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=32
 
 
-python tta.py
+python submission_parallel.py

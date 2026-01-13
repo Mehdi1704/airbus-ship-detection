@@ -9,9 +9,9 @@ from multiprocessing import Pool, cpu_count
 # --- CONFIG ---
 FOLDER_PATH = '/home/mbouchou/test_v2/' 
 TFLITE_PATH = 'finetuned_model_512.tflite'
-SUBMISSION_FILE = 'submissions/finetuned/nofilter8.csv'
+SUBMISSION_FILE = 'submissions/finetuned/rgb8_50.csv'
 THRESHOLDS = [0.8] 
-MIN_PIXELS = 0  # INCREASED SAFETY: Ignore any ship smaller than 80 pixels
+MIN_PIXELS = 50  # INCREASED SAFETY: Ignore any ship smaller than 80 pixels
 
 # --- WORKER FUNCTION ---
 def process_chunk(file_chunk):
@@ -50,8 +50,9 @@ def process_chunk(file_chunk):
         img_resized = cv2.resize(img, (w, h))
         
         # CRITICAL FIX: Keep it BGR (Standard OpenCV)
+        img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
         # Convert to float32
-        img_float = img_resized.astype(np.float32)
+        img_float = img_rgb.astype(np.float32)
         
         # Apply Library Preprocessing
         img_input = preprocess_input(img_float)

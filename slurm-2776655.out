@@ -49,3 +49,46 @@ INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
 INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
 INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
 INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Segmentation Models: using `tf.keras` framework.
+Merging results...
+✅ FINISHED! Total Time: 24.1 minutes
+Saving submission_tta_thresh_0.8.csv...
+Saving submission_tta_thresh_0.85.csv...
+Saving submission_tta_thresh_0.9.csv...
+Done! Submit the 0.85 file first.
