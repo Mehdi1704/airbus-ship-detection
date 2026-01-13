@@ -4,12 +4,12 @@ import os
 import gc
 
 # --- CONFIGURATION ---
-INPUT_CSV = 'submissions/submission_final_04.csv'
-OUTPUT_DIR = 'submissions/pixel_tests_04' # Folder to save variants
+INPUT_CSV = 'submissions/finetuned/submission_v2_corrected_09.csv'
+OUTPUT_DIR = 'submissions/finetuned_09' # Folder to save variants
 IMG_SHAPE = (768, 768)
 
 # Define all the pixel thresholds you want to generate files for
-PIXEL_THRESHOLDS = [100, 200, 400, 600, 800, 1000]
+PIXEL_THRESHOLDS = [200, 400, 600]
 
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)

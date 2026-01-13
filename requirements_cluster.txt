@@ -45,6 +45,7 @@ rich==14.2.0
 scikit-image==0.25.2
 scikit-learn==1.7.2
 scipy==1.15.3
+seaborn==0.13.2
 segmentation-models==1.0.1
 six==1.17.0
 tensorboard==2.16.2
@@ -54,6 +55,7 @@ tensorflow-io-gcs-filesystem==0.37.1
 termcolor==3.3.0
 threadpoolctl==3.6.0
 tifffile==2025.5.10
+tqdm==4.67.1
 typing_extensions==4.15.0
 tzdata==2025.3
 urllib3==2.6.2

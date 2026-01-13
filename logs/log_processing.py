@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Configuration
-LOG_FILE = 'ship_training_2775964.log'
+LOG_FILE = 'fine_tune_training.log'
 CSV_OUTPUT = 'training_metrics.csv'
 
 def parse_log(file_path):

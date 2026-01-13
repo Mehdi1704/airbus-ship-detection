@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=8
 
 
-python postprocessing.py
+python log_processing.py
