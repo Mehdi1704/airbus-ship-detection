@@ -7,10 +7,11 @@ seaborn==0.13.2
 
 # Imaging / CV
 pillow==12.0.0
-opencv-python==4.12.0.88
+opencv-python==4.10.0.84
 scikit-image==0.25.2
 
 # ML
+segmentation-models==1.0.1
 scikit-learn==1.7.2
 tensorflow==2.16.2
 keras==3.13.0
