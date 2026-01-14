@@ -9,7 +9,7 @@ After preprocessing and cleaning, a subset of **12,788 images** is obtained, whi
 
 Download the subset of **12,788 cleaned and preprocessed images** from [Google Drive](https://drive.google.com/drive/folders/1PC9S4bVlWezJVHla-0PTY5gUMTZsLN3N?usp=drive_link) and place them in some folder.  
  
-> Note: In case we wanted to start to train the models, we would need to first generate the cached images and masks, by also downloading the cleaned `masks_subset.csv` file, updating the paths in the file 'preprocessing/build_cache.py', and running it as:
+> Note: In case we wanted to start to train the models, we would need to first generate the cached images and masks, by also downloading the cleaned `masks_subset.csv` file from [Google Drive](https://drive.google.com/file/d/1FnoCpy2vjUsD8iZGTghhNfe3XDoseHz8/view?usp=drive_link) (or project folder), updating the 4 path variables at the beginning of the file 'preprocessing/build_cache.py', and running it as:
 
 ```bash
 python preprocessing/build_cache.py
