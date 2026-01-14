@@ -3,8 +3,8 @@ import keras
 import numpy as np
 
 # --- CONFIG ---
-MODEL_PATH = '/Users/mbouchou/Downloads/final_model.keras'
-TFLITE_PATH = 'final_model.tflite'
+MODEL_PATH = '/home/mbouchou/airbus-ship-detection/resnet101.keras'
+TFLITE_PATH = '/home/mbouchou/airbus-ship-detection/resnet101.tflite'
 INPUT_SHAPE = (1, 256, 256, 3) # (Batch, Height, Width, Channels)
 
 print(f"Loading Keras model from {MODEL_PATH}...")

@@ -1,2 +1,2 @@
 *.keras
-seg_model_best_fast.keras
+*.tflite

@@ -8,10 +8,10 @@ from multiprocessing import Pool, cpu_count
 
 # --- CONFIG ---
 FOLDER_PATH = '/home/mbouchou/test_v2/' 
-TFLITE_PATH = 'finetuned_model_512.tflite'
-SUBMISSION_FILE = 'submissions/finetuned/rgb8_50.csv'
-THRESHOLDS = [0.8] 
-MIN_PIXELS = 50  # INCREASED SAFETY: Ignore any ship smaller than 80 pixels
+TFLITE_PATH = '/home/mbouchou/airbus-ship-detection/resnet101.tflite'
+SUBMISSION_FILE = '/home/mbouchou/airbus-ship-detection/final_submissions/resnet101_v2.csv'
+THRESHOLDS = [0.4] 
+MIN_PIXELS = 500  # INCREASED SAFETY: Ignore any ship smaller than 80 pixels
 
 # --- WORKER FUNCTION ---
 def process_chunk(file_chunk):

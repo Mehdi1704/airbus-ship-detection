@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=8
 
 
-python postprocessing.py
+python postprocessing/lighter_model.py

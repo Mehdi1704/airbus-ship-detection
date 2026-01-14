@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=32
 
 
-python submission_parallel.py
+python postprocessing/submission_parallel.py
