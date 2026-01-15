@@ -1,0 +1,17 @@
+name: myenv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - tensorflow
+      - opencv-python
+      - matplotlib
+      - numpy
+      - pandas
+      - scikit-image
+      - segmentation-models==1.0.1
+      - classification-models==0.1.0
+      - efficientnet==1.0.0
+      - pillow
