@@ -19,5 +19,5 @@ python preprocessing/build_cache.py
 
 Note that, currently, this notebook already has some test set image examples saved in the folder `images` within the current directory. However, one can also make it work for any image on the test set by doing the following:
 
-1. Download the test set of *15,606 images** from [Google Drive](https://drive.google.com/drive/folders/1BCn0aBh0GgeQU_HqWbvWlZ-DILSpUW9f?usp=drive_link)
+1. Download the test set of **15,606 images** from [Google Drive](https://drive.google.com/drive/folders/1BCn0aBh0GgeQU_HqWbvWlZ-DILSpUW9f?usp=drive_link)
 2. In cell 4 within the notebook, set the variable `TEST_DIR` to the path where these images were saved, and uncomment the lines stated in the notebook. 
