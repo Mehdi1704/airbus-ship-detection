@@ -22,14 +22,17 @@ Note that, currently, this notebook already has some test set image examples sav
 1. Download the test set of **15,606 images** from [Google Drive](https://drive.google.com/drive/folders/1BCn0aBh0GgeQU_HqWbvWlZ-DILSpUW9f?usp=drive_link)
 2. In cell 4 within the notebook, set the variable `TEST_DIR` to the path where these images were saved, and uncomment the lines stated in the notebook. 
 
+Our best model is the `finetuned_model_512.tflite` and exists in the repo, you can also find other models in our Google Drive, if you wish to use them for inference, you will need to convert them using `lighter_model.py`, this will convert the `.keras` to `.tflite`, which makes the model faster for inference and adapted to our script. 
+
 ---
 
 ## Repository Structure
 
 ### Root Files
 - **`README.md`** – Project documentation and setup instructions
-- **`requirements.txt`** – Python package dependencies
-- **`environment.yaml`** – Python package dependencies
+- **`requirements.txt`** – Python package dependencies if you use pip
+- **`environment.yaml`** – Python package dependencies for Mac
+- **`environment_windows.yaml`** – Python package dependencies for Windows
 - **`masks_subset.csv`** – CSV file containing ship mask annotations for the cleaned subset
 - **`inference.ipynb`** – Jupyter notebook for running inference on test images using trained models
 
